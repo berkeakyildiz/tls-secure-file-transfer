@@ -15,12 +15,12 @@ def create_root():
     certificate.gmtime_adj_notAfter(60 * 60 * 24 * 365)  # 1 year
 
     certificate_subject = certificate.get_subject()
-    certificate_subject.CN = "example-network.com"
-    certificate_subject.O = "my-network-common-name"
+    certificate_subject.CN = "example.com"
+    certificate_subject.O = "mycommonname"
 
     certificate_issuer = certificate.get_issuer()
-    certificate_issuer.CN = "example-network.com"
-    certificate_issuer.O = "my-network-common-name"
+    certificate_issuer.CN = "example.com"
+    certificate_issuer.O = "mycommonname"
 
     certificate.set_pubkey(public_key)
     certificate.add_extensions([
@@ -36,18 +36,18 @@ def create_root():
 
     certificate.sign(public_key, "sha1")
 
-    with open("root.pem", "wb") as certfile:
+    with open("Certificate/root.pem", "wb") as certfile:
         certfile.write(crypto.dump_certificate(crypto.FILETYPE_PEM, certificate))
         certfile.close()
 
-    with open("root.key", "wb") as pkeyfile:
+    with open("Certificate/root.key", "wb") as pkeyfile:
         pkeyfile.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, public_key))
         pkeyfile.close()
 
 
 def create_certificate(cn, o, server_side, cert_file_name, pkey_file_name):
-    rootpem = open("root.pem", "rb").read()
-    rootkey = open("root.key", "rb").read()
+    rootpem = open("Certificate/root.pem", "rb").read()
+    rootkey = open("Certificate/root.key", "rb").read()
     ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, rootpem)
     ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, rootkey)
 
@@ -66,7 +66,7 @@ def create_certificate(cn, o, server_side, cert_file_name, pkey_file_name):
 
     if server_side:
         cert.add_extensions([crypto.X509Extension(b"subjectAltName", False,
-                                                  b"DNS:test1.example-network.com,DNS:test2.example-network.com")])
+                                                  b"DNS:test1.example.com,DNS:test2.example.com")])
 
     cert.set_issuer(ca_cert.get_subject())
 
@@ -85,6 +85,6 @@ def create_certificate(cn, o, server_side, cert_file_name, pkey_file_name):
 print("Making root CA")
 create_root()
 print("Making server certificate")
-create_certificate("server", "my organisation", True, "server.crt", "server.key")
+create_certificate("server", "my organisation", True, "Certificate/server.crt", "Certificate/server.key")
 print("Making client certificate")
-create_certificate("client", "my organisation", False, "client.crt", "client.key")
+create_certificate("client", "my organisation", False, "Certificate/client.crt", "Certificate/client.key")
