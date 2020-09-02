@@ -1,20 +1,18 @@
-import asyncio
+import socket
 import ssl
+import os
+hostname = 'example.com'
 
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+context.load_verify_locations('root.pem')
 
-@asyncio.coroutine
-def connect():
-    sslcontext = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
-    # sslcontext.check_hostname = False
-    sslcontext.load_verify_locations("root.pem")
-    sslcontext.load_cert_chain(certfile="client.crt", keyfile="client.key")
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
+    with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+        file = os.open("recv_received.txt", "rb")
+        SendData = file.read(1024)
 
-    reader, writer = yield from asyncio.open_connection("127.0.0.1", 9001, ssl=sslcontext)
-    data = yield from reader.read()
-    print(data)
-    return
+        while SendData:
+            ssock.send(SendData)
+            SendData = file.read(1024)
 
-
-loop = asyncio.get_event_loop()
-
-loop.run_until_complete(connect())
+        ssock.close()
